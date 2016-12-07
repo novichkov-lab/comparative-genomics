@@ -1,0 +1,1 @@
+perl extract_taxonomy.pl data genome_list.txt -1
