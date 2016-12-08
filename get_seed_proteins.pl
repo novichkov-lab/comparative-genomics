@@ -9,7 +9,7 @@ my $sapServer = SAPserver->new();
 ###  Download SEED proteins  ###
 ################################
 
-my $work_dir = "data";
+my $work_dir = "seed";
 my $proteins_filename = "proteins.txt";
 
 if (@ARGV == 2) {
@@ -25,29 +25,40 @@ if (($work_dir ne "")&&(!(-e $work_dir))) {
 	exit(1);
 }
 
-$proteins_filename = $work_dir . "/" . $proteins_filename;
 
 my $genomeHash = $sapServer->all_genomes({
                             -complete => 1,
                             -prokaryotic => 1
                         });
 
-open (OUTFILE, ">$proteins_filename") or die ("Unable to open file $proteins_filename");
 
 #my $limit = 2;
+
+my $genome_list_file = $work_dir . "/genome_list.txt" ;
+open (OUTFILE, ">$genome_list_file") or die ("Unable to open file $genome_list_file");
+print OUTFILE join ("\n", keys %$genomeHash);
+close OUTFILE;
+
+$genome_list_file = $work_dir . "/processed_genome_list.txt" ;
 
 for my $genome_id (keys %$genomeHash) {
 #	if ($limit == 0) {last;} else {$limit--;}
 	my $fidHash = $sapServer->all_proteins({
 							-id => $genome_id
 						});
+	
+	my $out_filename = $work_dir . "/" . $genome_id ."_". $proteins_filename;
+	open (OUTFILE, ">$out_filename") or die ("Unable to open file $out_filename");
+
 	for my $protein_id (keys %$fidHash) {
 		my $sequence = $fidHash->{$protein_id};
 		print OUTFILE ">" . $protein_id . "\n ". $sequence. "\n";
 	}
+	close OUTFILE;
+	open (GENOMEFILE, ">>$genome_list_file") or die ("Unable to open file $genome_list_file");
+	print GENOMEFILE $genome_id."\n";
+	close GENOMEFILE;
+
 }
-
-
-close OUTFILE;
 exit(0);
 
